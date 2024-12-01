@@ -1,14 +1,16 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "../shared/Navbar";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { RadioGroup} from '../ui/radio-group';
 import { Button } from "../ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { Axis3DIcon, ClipboardTypeIcon } from "lucide-react";
+import { Axis3DIcon, ClipboardTypeIcon, Loader2 } from "lucide-react";
 import { USER_API_END_POINT } from "../../utils/constant";
 import { toast } from "sonner";
 import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import { setLoading } from "../../redux/authSlice";
 
 const Signup = () => {
   const [input, setInput] = useState({
@@ -19,6 +21,8 @@ const Signup = () => {
     role:"",
     file:""
   });
+  const {loading,user} = useSelector(store=>store.auth);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const changeEventHandler=(e)=>{
     setInput({...input,[e.target.name]:e.target.value});
@@ -38,6 +42,7 @@ const Signup = () => {
       formdata.append("file",input.file);
     }
     try {
+      dispatch(setLoading(true));
       const res = await axios.post(`${USER_API_END_POINT}/register`,formdata,{
         headers:{
           "Content-Type":"multipart/form-data"
@@ -52,7 +57,15 @@ const Signup = () => {
       console.log(error);
       toast.error(error.response.data.message);
     }
+    finally{
+      dispatch(setLoading(false));
+    }
   }
+  useEffect(()=>{
+    if(user){
+      navigate("/");
+    }
+  })
   return (
     <div>
       <Navbar />
@@ -129,7 +142,9 @@ const Signup = () => {
                 />
             </div>
           </div>
-          <Button type="submit" className="w-full my-4">Signup</Button>
+          {
+            loading?<Button className='w-full my-4'><Loader2 className = 'mr-2 h-4 animate-spin'/>Please wait</Button>:<Button type="submit" className="w-full my-4">Signup</Button>
+          }
           <span>Already have an account? <Link to="/login" className='text-blue-600'>Login</Link></span>
         </form>
       </div>

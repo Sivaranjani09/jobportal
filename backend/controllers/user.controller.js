@@ -1,15 +1,25 @@
 import { User } from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import cloudinary from "../utils/cloudinary.js";
+import getDataUri from "../utils/datauri.js";
 export const register = async (req,res)=>{
     try{
         const{fullname, email, phoneNumber, password, role}= req.body;
+        
         if(!fullname||!email|| !phoneNumber|| !password || !role){
             return res.status(400).json({
                 message:"Something is missing",
                 success:false
             });
         };
+
+        //cloudinary - profile
+        // const file = req.file;
+        // const fileUri = getDataUri(file);
+        // const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
+
+
         let user = await User.findOne({email});
         if(user){
             return res.status(400).json({
@@ -25,6 +35,11 @@ export const register = async (req,res)=>{
             password:hashedPassword,
             role,
 
+
+            //profile dynamic
+            // profile:{
+            //     profilePhoto :cloudResponse.secure_url,
+            // }
         });
         return res.status(201).json({
             message:"Account created successfully",
@@ -101,14 +116,47 @@ export const logout = async (req, res)=>{
 export const updateProfile = async(req,res)=>{
     try{
         const{fullname, email, phoneNumber, bio, skills} = req.body;
+       
         const file = req.file;
-        // cloud
-        // if(!fullname||!email|| !phoneNumber|| !bio || !skills){
-        //     return res.status(400).json({
-        //         message:"Something is missing",
-        //         success:false
+
+        //log
+        if (!file) {
+            return res.status(400).json({
+                message: "No file provided.",
+                success: false
+            });
+        }
+
+
+        const fileUri = getDataUri(file);
+        // const cloudResponse = await cloudinary.uploader.upload(fileUri.content, {
+        //     timeout: 60000,});
+
+        //log
+        // console.log("File name:", file.originalname);
+        // console.log("File size (bytes):", file.size);
+        // console.log("File type:", file.mimetype)
+
+
+
+        //cloudinary-resume update
+        // try {
+        //     const cloudResponse = await cloudinary.uploader.upload(fileUri.content, {
+        //         timeout: 120000, // Optional: Increase timeout
         //     });
-        // }; 
+        //     console.log("Upload successful:", cloudResponse);
+        // } catch (error) {
+        //     console.error("Cloudinary upload error:", error);
+        //     return res.status(500).json({
+        //         message: "Cloudinary upload failed.",
+        //         error: error.message,
+        //     });
+        // }
+
+        // cloud
+        
+
+        
         let skillsArray;
         if(skills){
           skillsArray = skills.split(",");
@@ -128,9 +176,12 @@ export const updateProfile = async(req,res)=>{
         if(bio) user.profile.bio = bio
         if(skills) user.profile.skills = skillsArray
         
-        //updating data
+        //updating data - cloudinary
         
-
+        // if(cloudResponse){
+        //     user.profile.resume = cloudResponse.secure_url//save cloudinary url
+        //     user.profile.resumeOriginalName = file.originalname//save original name
+        // }
 
         await user.save();
         user={

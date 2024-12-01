@@ -10,6 +10,7 @@ import applicationRoute from "./routes/application.route.js";
 dotenv.config({});
 const app = express();
 
+console.log("PORT:", process.env.PORT || "PORT not set");
 
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
